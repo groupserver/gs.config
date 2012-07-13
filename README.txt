@@ -1,54 +1,65 @@
-gs.config allows for generic configuration set based configuration. It is possibly easier to demonstrate than to explain.
+Introduction
+============
 
-The config file is structured like this:
+gs.config allows for generic configuration set based configuration. It is
+possibly easier to demonstrate than to explain.
 
-"""
-# One or more configuration groups
-[config-test]
-database = test
-smtp = test
-wibble = foo
+Configuration File
+==================
 
-[config-staging]
-database = live
-smtp = test
-wibble = blarg
+The configuration file is structured like this::
 
-# An actual configuration section for each configuration set
-[database-test]
-dsn = postgres://name:pass@server/database-test
+  # One or more configuration groups
+  [config-test]
+  database = test
+  smtp = test
+  wibble = foo
 
-[database-live]
-dsn = postgres://name:pass@server/database-live
+  [config-staging]
+  database = live
+  smtp = test
+  wibble = blarg
 
-[smtp-test]
-server = localhost
-port = 2525
+  # An actual configuration section for each configuration set
+  [database-test]
+  dsn = postgres://name:pass@server/database-test
 
-[wibble-foo]
-someparam = one
+  [database-live]
+  dsn = postgres://name:pass@server/database-live
 
-[wibble-blarg]
-someparam = two
-"""
+  [smtp-test]
+  server = localhost
+  port = 2525
 
-When the configuration is instantiated, an ID is passed. This ID identifies the configuration
-set that is currently being accessed. If an ID is not passed, an attempt is made to get the
-ID from the environment automatically. At the moment this is specific to the groupserver
-environment, though care is taken to ensure that it will fall back gracefully to being passed
-an ID.
+  [wibble-foo]
+  someparam = one
 
-> config = gs.config.getConfig('test')
+  [wibble-blarg]
+  someparam = two
+
+When the configuration is instantiated, an ID is passed. This ID identifies
+the configuration set that is currently being accessed. If an ID is not
+passed, an attempt is made to get the ID from the environment
+automatically. At the moment this is specific to the GroupServer_
+environment, though care is taken to ensure that it will fall back
+gracefully to being passed an ID.
+
+Interface
+=========
+
+ >>> config = gs.config.getConfig('test')
 
 You can ask for a specific configuration to be returned:
 
-> config.keys()
+>>> config.keys()
 {'database', 'smtp', 'wibble'}
-> config.get('database')
+>>> config.get('database')
 {'dsn': 'postgres://name:pass@server/database-test'}
 
-And as a convenience, you can pass in a (very) simple schema to handle validation and conversion:
+And as a convenience, you can pass in a (very) simple schema to handle
+validation and conversion:
 
-> config.get_validated('test', {'server': str, 'port': int})
+>>> config.get_validated('test', {'server': str, 'port': int})
 {'server': 'localhost', 'port': 2525}
 
+.. _GroupServer: http://groupserver.org/
