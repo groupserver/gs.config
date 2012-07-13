@@ -16,6 +16,10 @@ dirpath = os.path.dirname(path)
 class ConfigError(Exception):
     pass
 
+configGroups = {}
+databaseConfig = {}
+smtpConfig = {}
+
 def init():
     cfg = getConfiguration()
     parser = ConfigParser.SafeConfigParser()
@@ -28,11 +32,22 @@ def init():
     parser.read(configName)
     for section in parser.sections():
         top = time.time()
-        #if section.find('database-') == 0:
-        #    assert parser.has_option(section, 'instance_id'),\
-        #            "No instance ID specified in section '%s'" % section
-        #    assert parser.has_option(section, 'dsn'),\
-        #            "No dsn specified in section '%s'" % section         
+        if section.find('database-') == 0:
+            configdict = {}
+            configid = None
+            # check we have everything
+            for option in ('id','dsn'):
+                if not parser.has_option(section, option):
+                    raise ConfigError(
+                   "No option %s specified in database section %s"
+                          % (option, section))
+                if option == 'id':
+                    configid = parser.get(section, 'id')
+                else:
+                    configdict[option] = parser.get(section, option)
+            
+            databaseConfig[configid] = configdict
+
         #    instance_id = parser.get(section, 'instance_id')
         #    dsn = parser.get(section, 'dsn')
         #    
