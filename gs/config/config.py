@@ -4,21 +4,73 @@ from os.path import isfile
 from App.config import getConfiguration
 from App.FindHomes import CLIENT_HOME, INSTANCE_HOME
 import ConfigParser
-import core
 import logging
 import time
 
 log = logging.getLogger('gs.config')
 
-path = core.__file__
-dirpath = os.path.dirname(path)
-
 class ConfigError(Exception):
     pass
 
-configGroups = {}
-databaseConfig = {}
-smtpConfig = {}
+class Config(object):
+    schema = {}
+    def __init__(self, configset=None, configpath=None):
+        if not configset:
+            # get the configset from our groupserver config, otherwise abandon ship.
+            pass
+
+        if not configpath:
+            # again, try and figure out from our groupserver config, otherwise abort.
+            pass
+
+        log.info("Reading the config file <%s>" % configpath)
+    
+        self.parser = ConfigParser.SafeConfigParser()
+        self.parser.read(configpath)
+
+        if not self.parser.has_section('config-'+configset):
+            raise ConfigError('No configuration set "%s" defined in file.' % configset)
+        self.configset = configset
+
+    def set_schema(self, configtype, schema):
+        assert isinstance(schema, dict), "Schema must be a dictionary of converters"
+        self.schema[configtype] = schema
+
+    def get_schema(self, configtype):
+        if not self.schema.has_key(configtype):
+            raise ConfigError('No schema defined for configuration type "%s".' % configtype)
+
+        return self.schema[configtype]
+    
+    def keys(self):
+        return self.parser.options('config-'+self.configset)
+
+    def get(self, configtype):
+        if configtype not in self.keys():
+            raise ConfigError('No configuration defined for "%s" in set "%".' %
+                      (configtype, configset))
+
+        secval = self.parser.get('config-'+self.configset, configtype)
+        if not self.parser.has_section(configtype+'-'+secval):
+            raise ConfigError('No configuration for type "%s" with value "%s".' % 
+                               (configtype, secval))
+       
+        schema = self.get_schema(configtype)
+
+        retval = {}
+        for option in self.parser.options(configtype+'-'+secval):
+            if option not in schema:
+                raise ConfigError('No option "%s" defined in schema for "%s"' %
+                          (option, configtype))
+            val = self.parser.get(configtype+'-'+secval, option)
+            try:
+                val = schema[option](val)
+            except:
+                raise ConfigError('Unable to convert option "%s" value "%s" using "%s"' % 
+                                  (option, val, schema[option]))
+            retval[option] = val
+
+        return retval
 
 def init():
     cfg = getConfiguration()
@@ -48,12 +100,3 @@ def init():
             
             databaseConfig[configid] = configdict
 
-        #    instance_id = parser.get(section, 'instance_id')
-        #    dsn = parser.get(section, 'dsn')
-        #    
-        #    databases[instance_id] = init_db(dsn)
-        #    
-        #    bottom = time.time()
-        #    
-        #    log.info("Initialised database for instance %s in %.2fs" % 
-        #              (instance_id, (bottom-top)))

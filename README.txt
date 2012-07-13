@@ -47,19 +47,20 @@ gracefully to being passed an ID.
 Interface
 =========
 
- >>> config = gs.config.getConfig('test')
+::
 
-You can ask for a specific configuration to be returned:
+ >>> from gs.config import Config
+ >>> config = Config('test', 'config.ini')
 
->>> config.keys()
-{'database', 'smtp', 'wibble'}
->>> config.get('database')
-{'dsn': 'postgres://name:pass@server/database-test'}
-
-And as a convenience, you can pass in a (very) simple schema to handle
-validation and conversion:
-
->>> config.get_validated('test', {'server': str, 'port': int})
-{'server': 'localhost', 'port': 2525}
+ >>> config.set_schema('smtp', {'server': str, 'port': int})
+ >>> config.get('smtp')
+ {'port': 2525, 'server': localhost}
+ >>> c.set_schema('wibble', {'someparam': int})
+ >>> c.get('wibble')
+ Traceback (most recent call last):
+   File "<console>", line 1, in <module>
+   File "/home/deploy/groupserver-12.05/src/gs.config/gs/config/config.py", line 70, in get
+     (option, val, schema[option]))
+ ConfigError: Unable to convert option "someparam" value "one" using "<type 'int'>"
 
 .. _GroupServer: http://groupserver.org/
