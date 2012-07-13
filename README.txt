@@ -47,14 +47,27 @@ gracefully to being passed an ID.
 Interface
 =========
 
-::
+Example
+=======
+
+A configuration class is initialised. The two parameters are optional,
+depending on the degree to which we want the environment to configure things
+automatically::
 
  >>> from gs.config import Config
  >>> config = Config('test', 'config.ini')
 
+A schema must be provided before data is retrieved::
+
  >>> config.set_schema('smtp', {'server': str, 'port': int})
+
+Then a specific configuration type can be retrieved::
+
  >>> config.get('smtp')
  {'port': 2525, 'server': localhost}
+
+If a schema doesn't fit the actual data, a ConfigError is raised::
+
  >>> c.set_schema('wibble', {'someparam': int})
  >>> c.get('wibble')
  Traceback (most recent call last):
