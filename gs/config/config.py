@@ -1,12 +1,17 @@
 # coding=utf-8
 import os
 from os.path import isfile
-from App.config import getConfiguration
-from App.FindHomes import CLIENT_HOME, INSTANCE_HOME
-from zope.globalrequest import getRequest
 import ConfigParser
 import logging
 import time
+
+try:
+    from App.config import getConfiguration
+    from zope.globalrequest import getRequest
+    USINGZOPE = True
+except ImportError:
+    USINGZOPE = False
+    getConfiguration = getRequest = None
 
 log = logging.getLogger('gs.config')
 
@@ -23,10 +28,13 @@ class ConfigError(Exception):
     pass
 
 def getInstanceId():
-    request = getRequest()
     instance_id = 'default'
-    if request:
-        instance_id = request.get('HTTP_INSTANCEID', 'default')
+    if USINGZOPE:
+        request = getRequest()
+        instance_id = 'default'
+        if request:
+            instance_id = request.get('HTTP_INSTANCEID', 'default')
+
     return instance_id
 
 class Config(object):
@@ -36,11 +44,13 @@ class Config(object):
             # get the configset from our groupserver config, otherwise abandon ship.
             pass
 
-        if not configpath:
+        if USINGZOPE and not configpath:
             # again, try and figure out from our groupserver config,
             # otherwise abort.
             cfg = getConfiguration()
             configpath = os.path.join(cfg.instancehome, 'etc/gsconfig.ini')
+        elif not configpath:
+            raise ConfigError("No configpath set, unable to read configfile")
 
         if not isfile(configpath):
             raise ConfigError('Could not read the configuration, as the '
