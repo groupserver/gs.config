@@ -3,14 +3,31 @@ import os
 from os.path import isfile
 from App.config import getConfiguration
 from App.FindHomes import CLIENT_HOME, INSTANCE_HOME
+from zope.globalrequest import getRequest
 import ConfigParser
 import logging
 import time
 
 log = logging.getLogger('gs.config')
 
+def bool_(val):
+    if val.lower() in ('true', 'yes', 'on'):
+        val = True
+    elif val.lower() in ('false', 'no', 'off'):
+        val = False
+    else:
+        raise ValueError, "Not a bool"
+    return val
+
 class ConfigError(Exception):
     pass
+
+def getInstanceId():
+    request = getRequest()
+    instance_id = 'default'
+    if request:
+        instance_id = request.get('HTTP_INSTANCEID', 'default')
+    return instance_id
 
 class Config(object):
     schema = {}
@@ -20,11 +37,16 @@ class Config(object):
             pass
 
         if not configpath:
-            # again, try and figure out from our groupserver config, otherwise abort.
-            pass
+            # again, try and figure out from our groupserver config,
+            # otherwise abort.
+            cfg = getConfiguration()
+            configpath = os.path.join(cfg.instancehome, 'etc/gsconfig.ini')
 
-        log.info("Reading the config file <%s>" % configpath)
-    
+        if not isfile(configpath):
+            raise ConfigError('Could not read the configuration, as the '
+                'configuration file "%s" does not exist.' % configpath)
+
+        log.info("Reading the config file <%s>" % configpath) 
         self.parser = ConfigParser.SafeConfigParser()
         self.parser.read(configpath)
 
@@ -47,8 +69,8 @@ class Config(object):
 
     def get(self, configtype):
         if configtype not in self.keys():
-            raise ConfigError('No configuration defined for "%s" in set "%".' %
-                      (configtype, configset))
+            raise ConfigError('No configuration defined for "%s" in set "%s".' %
+                      (configtype, self.configset))
 
         secval = self.parser.get('config-'+self.configset, configtype)
         if not self.parser.has_section(configtype+'-'+secval):
@@ -71,32 +93,3 @@ class Config(object):
             retval[option] = val
 
         return retval
-
-def init():
-    cfg = getConfiguration()
-    parser = ConfigParser.SafeConfigParser()
-    configName = os.path.join(cfg.instancehome, 'etc/database.ini')
-    log.info('Reading the config file <%s>' % configName)
-    if not isfile(configName):
-        m = 'Could not read the configuration, as the configuration '\
-            'file "%s" does not exist.' % configName
-        raise ConfigError(m)
-    parser.read(configName)
-    for section in parser.sections():
-        top = time.time()
-        if section.find('database-') == 0:
-            configdict = {}
-            configid = None
-            # check we have everything
-            for option in ('id','dsn'):
-                if not parser.has_option(section, option):
-                    raise ConfigError(
-                   "No option %s specified in database section %s"
-                          % (option, section))
-                if option == 'id':
-                    configid = parser.get(section, 'id')
-                else:
-                    configdict[option] = parser.get(section, option)
-            
-            databaseConfig[configid] = configdict
-
