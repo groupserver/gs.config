@@ -32,6 +32,8 @@ setup(name='gs.config',
     zip_safe=True,
     install_requires=[
         'setuptools',
+        'gs.email',
+        'zope.globalrequest',
         # -*- Extra requirements: -*-
     ],
     entry_points="""
