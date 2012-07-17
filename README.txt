@@ -1,11 +1,44 @@
 Introduction
 ============
 
-gs.config allows for generic configuration set based configuration. It is
-possibly easier to demonstrate than to explain.
+This product provides the basic configuration system for GroupServer_.
+Each GroupServer instance is made up of a component, and each 
+component is made up of configuration options:
 
-Configuration File
-==================
+* Instance
+  
+  + Component
+  
+     - Configuration
+     
+Sadly the ConfigParser_ system does not allow for this hierarchy. To 
+overcome this the *name* *space* is used to provide the relationship 
+between an instance and the component.
+
+The instance is marked with the name ``[config-${name}]``, where
+``${name}`` is the name of the instance. For example ``[config-main]``
+for the instance ``main``.
+
+Within each instance the components are listed. There are four components
+that are recognised:
+
+#. ``database`` (see ``gs.database``)
+#. ``smtp`` (see ``gs.email``)
+#. ``cache`` (see ``gs.cache``)
+#. ``tokenauth`` (see ``gs.auth.token``)
+
+For each component the name of the section is given. (The configuration 
+for a component can be shared by multiple GroupServer instances.)::
+
+  [config-production]
+  database = production
+  smtp = external
+  cache = production
+  tokenauth = production
+  
+Each component is a configuration section, with a name of the form
+``[${component}-${name}]``. For example ``[database-production]`` for the 
+database section named *production*.
 
 The configuration file is structured like this::
 
@@ -77,3 +110,4 @@ If a schema doesn't fit the actual data, a ConfigError is raised::
  ConfigError: Unable to convert option "someparam" value "one" using "<type 'int'>"
 
 .. _GroupServer: http://groupserver.org/
+.. _ConfigParser: http://docs.python.org/library/configparser.html
