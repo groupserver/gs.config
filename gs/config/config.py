@@ -39,11 +39,7 @@ def getInstanceId():
 
 class Config(object):
     schema = {}
-    def __init__(self, configset=None, configpath=None):
-        if not configset:
-            # get the configset from our groupserver config, otherwise abandon ship.
-            pass
-
+    def __init__(self, configset, configpath=None):
         if USINGZOPE and not configpath:
             # again, try and figure out from our groupserver config,
             # otherwise abort.
