@@ -34,6 +34,7 @@ setup(name='gs.config',
         'setuptools',
         # -*- Extra requirements: -*-
     ],
+# zope.globalrequest and Zope2 are both optional.
     entry_points="""
     # -*- Entry points: -*-
     """,)
