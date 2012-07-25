@@ -77,18 +77,35 @@ automatically. At the moment this is specific to the GroupServer_
 environment, though care is taken to ensure that it will fall back
 gracefully to being passed an ID.
 
-Interface
-=========
+``Config`` Interface
+====================
+
+The class that represents the system configuration.
+
+``Config(setId, [fileName])``:
+  Create a new configuration class for the set with the ID ``setId``. If
+  ``fileName`` is provided then the configuration will be read from that
+  file, otherwise it will be read from the default (``etc/gsconfig.ini``)
+
+``Config.set_schema(sectionId, optionsDict)``:
+  Set the schema that is used for parsing the options from the section with
+  the identifier ``sectionId``. The ``optionsDict`` is a dictionary of
+  ``optionId: type`` pairs. The section for the set specified earlier will
+  be used.
+
+``Config.get(optionId)``:
+  Get the option with the identifier ``optionId``. The value will be cast
+  to using the type specified by ``set_schema``.
 
 Example
-=======
+-------
 
-A configuration class is initialised. The two parameters are optional,
+A configuration class is initialised. The second parameter is optional,
 depending on the degree to which we want the environment to configure things
 automatically::
 
  >>> from gs.config import Config
- >>> config = Config('test', 'config.ini')
+ >>> config = Config('test')
 
 A schema must be provided before data is retrieved::
 
