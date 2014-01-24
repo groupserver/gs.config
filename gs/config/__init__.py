@@ -1,3 +1,5 @@
-# coding=utf-8
-from gs.config.config import Config, getInstanceId
-#from gs.email import *
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+#lint:disable
+from .config import Config, getInstanceId
+#lint:enable
