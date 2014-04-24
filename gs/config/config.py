@@ -32,6 +32,8 @@ except ImportError:
 
 
 def bool_(val):
+    '''Turn the plain-text ways of writing Boolean values into a Boolean
+    value.'''
     if val.lower() in ('true', 'yes', 'on'):
         val = True
     elif val.lower() in ('false', 'no', 'off'):
@@ -81,15 +83,16 @@ class Config(object):
         self.configset = configset
 
     def set_schema(self, configtype, schema):
-        assert isinstance(schema, dict),\
-            "Schema must be a dictionary of converters"
+        if not isinstance(schema, dict):
+            m = "Schema must be a dictionary of converters, not a {0}"
+            msg = m.format(type(schema))
+            raise ValueError(msg)
         self.schema[configtype] = schema
 
     def get_schema(self, configtype):
         if not (configtype in self.schema):
             m = 'No schema defined for configuration type "%s".' % configtype
             raise ConfigError(m)
-
         return self.schema[configtype]
 
     def keys(self):
