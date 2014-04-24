@@ -17,7 +17,7 @@ from unittest import TestCase
 import gs.config.config
 
 
-class TestConfig(TestCase):
+class TestBool(TestCase):
     '''Test the gs.config.config module'''
 
     def test_bool_true(self):
