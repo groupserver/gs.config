@@ -13,6 +13,8 @@
 #
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
+from os import remove
+from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from mock import MagicMock
 import gs.config.config
@@ -81,3 +83,114 @@ class TestGetInstanceId(TestCase):
         r = gs.config.config.getInstanceId()
         self.assertEqual(1, gs.config.config.getRequest.call_count)
         self.assertEqual('default', r)
+
+
+class TestConfig(TestCase):
+    config = '''[config-default]
+show = EthylTheFrog
+parana = brothers
+
+[show-EthylTheFrog]
+tonight = violence
+toadTheWetSprocket = no
+
+[parana-brothers]
+twins = true
+names =
+  Dirk
+  Dinsdale
+likes = Boxing and putting the boot in.
+age = 12'''
+
+    def setUp(self):
+        self.oldUsingZope = gs.config.config.USINGZOPE
+
+    def tearDown(self):
+        gs.config.config.USINGZOPE = self.oldUsingZope
+
+    def test_no_config(self):
+        '''Test that we geta a ConfigPathError if there is no pointer to the
+        config file.'''
+        gs.config.config.USINGZOPE = False
+        self.assertRaises(gs.config.config.ConfigPathError,
+                            gs.config.config.Config, ('default', ))
+
+    def test_missing_file(self):
+        '''Test we get a ConfigFileError if we provide a config file, but it is
+        missing.'''
+        gs.config.config.USINGZOPE = False
+        with NamedTemporaryFile('w', delete=True) as tmp:
+            configFile = tmp.name
+            tmp.write('Delete me.')
+        self.assertRaises(gs.config.config.ConfigFileError,
+                            gs.config.config.Config, 'default',
+                            configpath=configFile)
+
+    def get_config_file(self):
+        with NamedTemporaryFile('w', delete=False) as tmp:
+            retval = tmp.name
+            tmp.write(self.config)
+        return retval
+
+    @staticmethod
+    def del_config_file(filename):
+        try:
+            remove(filename)
+        except OSError:
+            pass
+
+    def test_missing_section(self):
+        '''Test that we get a ConfigSetError if the config file exists, but it
+        lacks the section.'''
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        self.assertRaises(gs.config.config.ConfigSetError,
+                            gs.config.config.Config, 'parrot',
+                            configpath=configFile)
+        self.del_config_file(configFile)
+
+    def test_init(self):
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        self.assertEqual(c.configset, 'default')
+        self.assertEqual(c.keys(), ['show', 'parana'])
+        self.del_config_file(configFile)
+
+    def test_set_schema(self):
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str}
+        c.set_schema('parana', s)
+        self.assertEqual(s, c.schema['parana'])
+        self.del_config_file(configFile)
+
+    def val_test(self, d, name, expected):
+        self.assertIn(name, d)
+        self.assertEqual(d[name], expected)
+
+    def test_get(self):
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str, 'age': int}
+        c.set_schema('parana', s)
+
+        p = c.get('parana')
+        self.val_test(p, 'twins', True)
+        self.val_test(p, 'names', '\nDirk\nDinsdale')
+        self.val_test(p, 'likes', 'Boxing and putting the boot in.')
+        self.val_test(p, 'age', 12)
+
+        self.del_config_file(configFile)
+
+    def test_get_convert_errror(self):
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        # Dicts do not work.
+        s = {'twins': bool, 'names': dict, 'likes': str, 'age': int}
+        c.set_schema('parana', s)
+
+        self.assertRaises(gs.config.config.ConfigConvertError, c.get, 'parana')

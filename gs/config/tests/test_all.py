@@ -14,8 +14,8 @@
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
 from unittest import TestSuite, main as unittest_main
-from gs.config.tests.config import TestBool, TestGetInstanceId
-testCases = (TestBool, TestGetInstanceId, )
+from gs.config.tests.config import TestBool, TestGetInstanceId, TestConfig
+testCases = (TestBool, TestGetInstanceId, TestConfig, )
 
 
 def load_tests(loader, tests, pattern):
