@@ -12,10 +12,15 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-import os
-from os.path import isfile
-import ConfigParser
-import logging
+from __future__ import absolute_import, unicode_literals
+from os.path import isfile, join as path_join
+import sys
+if (sys.version_info >= (3, )):
+    from configparser import SafeConfigParser
+else:
+    from ConfigParser import SafeConfigParser  # lint:ok
+from logging import getLogger
+log = getLogger('gs.config')
 
 try:
     from App.config import getConfiguration
@@ -24,8 +29,6 @@ try:
 except ImportError:
     USINGZOPE = False
     getConfiguration = getRequest = None  # lint:ok
-
-log = logging.getLogger('gs.config')
 
 
 def bool_(val):
@@ -48,7 +51,7 @@ def getInstanceId():
         request = getRequest()
         if request:
             instance_id = request.get('HTTP_INSTANCEID', '')
-    retval = ((instance_id and instance_id) or 'default')
+    retval = instance_id if instance_id else 'default'
     return retval
 
 
@@ -60,7 +63,7 @@ class Config(object):
             # again, try and figure out from our groupserver config,
             # otherwise abort.
             cfg = getConfiguration()
-            configpath = os.path.join(cfg.instancehome, 'etc/gsconfig.ini')
+            configpath = path_join(cfg.instancehome, 'etc/gsconfig.ini')
         elif not configpath:
             raise ConfigError("No configpath set, unable to read configfile")
 
@@ -69,7 +72,7 @@ class Config(object):
                 'configuration file "%s" does not exist.' % configpath)
 
         log.info("Reading the config file <%s>" % configpath)
-        self.parser = ConfigParser.SafeConfigParser()
+        self.parser = SafeConfigParser()
         self.parser.read(configpath)
 
         if not self.parser.has_section('config-' + configset):
