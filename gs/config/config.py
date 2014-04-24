@@ -21,7 +21,9 @@ else:
     from ConfigParser import SafeConfigParser  # lint:ok
 from logging import getLogger
 log = getLogger('gs.config')
-
+from .errors import (ConfigPathError, ConfigFileError, ConfigSetError,
+    ConfigNoSchemaError, ConfigNoOptionError, ConfigNoSectionError,
+    ConfigConvertError)
 try:
     from App.config import getConfiguration
     from zope.globalrequest import getRequest
@@ -43,10 +45,6 @@ def bool_(val):
     return val
 
 
-class ConfigError(Exception):
-    pass
-
-
 def getInstanceId():
     instance_id = ''
     if USINGZOPE:
@@ -66,20 +64,24 @@ class Config(object):
             # otherwise abort.
             cfg = getConfiguration()
             configpath = path_join(cfg.instancehome, 'etc/gsconfig.ini')
-        elif not configpath:
-            raise ConfigError("No configpath set, unable to read configfile")
+        elif configpath is None:
+            msg = "No configpath set, unable to read configfile"
+            raise ConfigPathError(msg)
 
         if not isfile(configpath):
-            raise ConfigError('Could not read the configuration, as the '
-                'configuration file "%s" does not exist.' % configpath)
+            m = 'Could not read the configuration, as the configuration file '\
+                '"{0}" does not exist.'
+            msg = m.format(configpath)
+            raise ConfigFileError(msg)
 
         log.info("Reading the config file <%s>" % configpath)
         self.parser = SafeConfigParser()
         self.parser.read(configpath)
 
         if not self.parser.has_section('config-' + configset):
-            m = 'No configuration set "%s" defined in file.' % configset
-            raise ConfigError(m)
+            m = 'No configuration set "{0}" defined in file "{1}".'
+            msg = m.format(configset, configpath)
+            raise ConfigSetError(msg)
         self.configset = configset
 
     def set_schema(self, configtype, schema):
@@ -90,9 +92,10 @@ class Config(object):
         self.schema[configtype] = schema
 
     def get_schema(self, configtype):
-        if not (configtype in self.schema):
-            m = 'No schema defined for configuration type "%s".' % configtype
-            raise ConfigError(m)
+        if configtype not in self.schema:
+            m = 'No schema defined for configuration type "{0}".'
+            msg = m.format(configtype)
+            raise ConfigNoSchemaError(msg)
         return self.schema[configtype]
 
     def keys(self):
@@ -100,31 +103,31 @@ class Config(object):
 
     def get(self, configtype):
         if configtype not in self.keys():
-            m = 'No configuration defined for "%s" in set "%s".' %\
-                  (configtype, self.configset)
-            raise ConfigError(m)
+            m = 'No configuration defined for "{0}" in set "{1}".'
+            msg = m.format(configtype, self.configset)
+            raise ConfigNoSectionError(msg)
 
         secval = self.parser.get('config-' + self.configset, configtype)
         if not self.parser.has_section(configtype + '-' + secval):
-            m = 'No configuration for type "%s" with value "%s".' %\
-                   (configtype, secval)
-            raise ConfigError(m)
+            m = 'No configuration section for type "{0}" with value "{1}".'
+            msg = m.format(configtype, secval)
+            raise ConfigNoSectionError(msg)
 
         schema = self.get_schema(configtype)
 
         retval = {}
         for option in self.parser.options(configtype + '-' + secval):
             if option not in schema:
-                m = 'No option "%s" defined in schema for "%s"' %\
-                          (option, configtype)
-                raise ConfigError(m)
+                m = 'No option "{0}" defined in schema for "{1}".'
+                msg = m.format(option, configtype)
+                raise ConfigNoOptionError(m)
             val = self.parser.get(configtype + '-' + secval, option)
             try:
                 val = schema[option](val)
             except:
-                m = 'Unable to convert option "%s" value "%s" using "%s"' %\
-                      (option, val, schema[option])
-                raise ConfigError(m)
+                m = 'Unable to convert option "{0}" value "{1}" using "{2}'
+                msg = m.format(option, val, schema[option])
+                raise ConfigConvertError(msg)
             retval[option] = val
 
         return retval
