@@ -24,6 +24,7 @@ log = getLogger('gs.config')
 from .errors import (ConfigPathError, ConfigFileError, ConfigSetError,
     ConfigNoSchemaError, ConfigNoOptionError, ConfigNoSectionError,
     ConfigConvertError)
+from .errors import ConfigError  # To make an import happy  # lint:ok
 try:
     from App.config import getConfiguration
     from zope.globalrequest import getRequest
