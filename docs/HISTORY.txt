@@ -1,20 +1,26 @@
 Changelog
 =========
 
-2.1 (2014-04-25)
-----------------
+2.1.1 (2014-05-05)
+------------------
 
-* Python 3 support
-* Updated documentation
-* Unit tests and tox support added
+* Added Sphinx documentation.
+
+
+2.1.0 (2014-04-25)
+------------------
+
+* Python 3 support.
+* Updated documentation.
+* Unit tests and tox support added.
 
 2.0.0 (2013-08-10)
 ------------------
 
-* Merge of some code from ``gs.database``
-* Reduced dependency on Zope (now an extra requirement)
+* Merge of some code from ``gs.database``.
+* Reduced dependency on Zope (now an extra requirement).
 
 1.0.0 (2012-07-13)
 ------------------
 
-* Initial version
+* Initial version.
