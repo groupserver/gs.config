@@ -121,6 +121,7 @@ gracefully to being passed an ID.
 Resources
 =========
 
+- Documentation: http://gsconfig.readthedocs.org/
 - Code repository: https://source.iopen.net/groupserver/gs.config
 - Questions and comments to http://groupserver.org/groups/development
 - Report bugs at https://redmine.iopen.net/projects/groupserver
