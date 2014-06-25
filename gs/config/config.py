@@ -190,7 +190,7 @@ from a string to one of the types passed in as :param:`schema`.
             if option not in schema:
                 m = 'No option "{0}" defined in schema for "{1}".'
                 msg = m.format(option, configtype)
-                raise ConfigNoOptionError(m)
+                raise ConfigNoOptionError(msg)
             val = self.parser.get(configtype + '-' + secval, option)
             try:
                 val = schema[option](val)
