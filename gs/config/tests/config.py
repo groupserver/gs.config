@@ -13,11 +13,13 @@
 #
 ##############################################################################
 from __future__ import absolute_import, unicode_literals
+import codecs
 from os import remove
 from tempfile import NamedTemporaryFile
 from unittest import TestCase
 from mock import MagicMock
 import gs.config.config
+from gs.config.errors import ConfigNoSectionError, ConfigNoOptionError
 
 
 class TestBool(TestCase):
@@ -100,7 +102,8 @@ names =
   Dirk
   Dinsdale
 likes = Boxing and putting the boot in.
-age = 12'''
+age = 12
+'''
 
     def setUp(self):
         self.oldUsingZope = gs.config.config.USINGZOPE
@@ -182,6 +185,50 @@ age = 12'''
         self.val_test(p, 'names', '\nDirk\nDinsdale')
         self.val_test(p, 'likes', 'Boxing and putting the boot in.')
         self.val_test(p, 'age', 12)
+
+        self.del_config_file(configFile)
+
+    def test_get_no_config(self):
+        '''Test getting that getting the "wrong" config raises an error.'''
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str, 'age': int}
+        c.set_schema('parana', s)
+
+        self.assertRaises(ConfigNoSectionError, c.get, 'frog')
+
+    def test_get_no_option(self):
+        '''Test getting that getting the "wrong" option raises an error.'''
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str, 'age': int,
+                'violence': bool}
+        c.set_schema('parana', s)
+
+        p = c.get('parana')
+        self.assertNotIn('violence', p)
+
+    def test_get_dan(self):
+        '''Test getting that getting an option that has no schema raises an
+error. Named for Dan Randow, who found the issue'''
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+
+        # Write an option to the end of the config file
+        with codecs.open(configFile, 'a', encoding='utf-8') as outfile:
+            outfile.write('violence = False\n')
+
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str, 'age': int}
+        c.set_schema('parana', s)
+
+        with self.assertRaises(ConfigNoOptionError) as cm:
+            c.get('parana')
+        msg = str(cm.exception)
+        self.assertIn('violence', msg)
+        self.assertIn('parana', msg)
 
         self.del_config_file(configFile)
 
