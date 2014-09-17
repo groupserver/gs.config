@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.1.2 (2014-09-16)
+2.1.3 (2014-09-16)
 ------------------
 
 * Renaming the ``*txt`` files as ``*rst`` files, for GitHub
