@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-##############################################################################
+############################################################################
 #
 # Copyright © 2014 OnlineGroups.net and Contributors.
 # All Rights Reserved.
@@ -11,7 +11,7 @@
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 # FOR A PARTICULAR PURPOSE.
 #
-##############################################################################
+############################################################################
 from __future__ import absolute_import, unicode_literals
 import codecs
 from os import remove
@@ -38,7 +38,8 @@ class TestBool(TestCase):
             self.assertFalse(r)
 
     def test_bool_garbage(self):
-        self.assertRaises(ValueError, gs.config.config.bool_, 'Ethyl the frog.')
+        self.assertRaises(ValueError, gs.config.config.bool_,
+                          'Ethyl the frog.')
 
 
 class FakeRequest(object):
@@ -116,18 +117,18 @@ age = 12
         config file.'''
         gs.config.config.USINGZOPE = False
         self.assertRaises(gs.config.config.ConfigPathError,
-                            gs.config.config.Config, ('default', ))
+                          gs.config.config.Config, ('default', ))
 
     def test_missing_file(self):
-        '''Test we get a ConfigFileError if we provide a config file, but it is
-        missing.'''
+        '''Test we get a ConfigFileError if we provide a config file,
+        but it is missing.'''
         gs.config.config.USINGZOPE = False
         with NamedTemporaryFile('w', delete=True) as tmp:
             configFile = tmp.name
             tmp.write('Delete me.')
         self.assertRaises(gs.config.config.ConfigFileError,
-                            gs.config.config.Config, 'default',
-                            configpath=configFile)
+                          gs.config.config.Config, 'default',
+                          configpath=configFile)
 
     def get_config_file(self):
         with NamedTemporaryFile('w', delete=False) as tmp:
@@ -143,13 +144,13 @@ age = 12
             pass
 
     def test_missing_section(self):
-        '''Test that we get a ConfigSetError if the config file exists, but it
-        lacks the section.'''
+        '''Test that we get a ConfigSetError if the config file exists,
+        but it lacks the section.'''
         gs.config.config.USINGZOPE = False
         configFile = self.get_config_file()
         self.assertRaises(gs.config.config.ConfigSetError,
-                            gs.config.config.Config, 'parrot',
-                            configpath=configFile)
+                          gs.config.config.Config, 'parrot',
+                          configpath=configFile)
         self.del_config_file(configFile)
 
     def test_init(self):
@@ -204,7 +205,7 @@ age = 12
         configFile = self.get_config_file()
         c = gs.config.config.Config('default', configpath=configFile)
         s = {'twins': bool, 'names': str, 'likes': str, 'age': int,
-                'violence': bool}
+             'violence': bool}
         c.set_schema('parana', s)
 
         p = c.get('parana')
@@ -240,4 +241,5 @@ error. Named for Dan Randow, who found the issue'''
         s = {'twins': bool, 'names': dict, 'likes': str, 'age': int}
         c.set_schema('parana', s)
 
-        self.assertRaises(gs.config.config.ConfigConvertError, c.get, 'parana')
+        self.assertRaises(gs.config.config.ConfigConvertError, c.get,
+                          'parana')

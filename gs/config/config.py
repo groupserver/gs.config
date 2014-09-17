@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-##############################################################################
+############################################################################
 #
 # Copyright © 2014 OnlineGroups.net and Contributors.
 # All Rights Reserved.
@@ -11,7 +11,7 @@
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 # FOR A PARTICULAR PURPOSE.
 #
-##############################################################################
+############################################################################
 from __future__ import absolute_import, unicode_literals
 from os.path import isfile, join as path_join
 import sys
@@ -22,8 +22,8 @@ else:
 from logging import getLogger
 log = getLogger('gs.config')
 from .errors import (ConfigPathError, ConfigFileError, ConfigSetError,
-    ConfigNoSchemaError, ConfigNoOptionError, ConfigNoSectionError,
-    ConfigConvertError)
+                     ConfigNoSchemaError, ConfigNoOptionError,
+                     ConfigNoSectionError, ConfigConvertError)
 from .errors import ConfigError  # To make an import happy  # lint:ok
 try:
     from App.config import getConfiguration
@@ -81,10 +81,11 @@ class Config(object):
                        from instance directory.
 :raises ConfigPathError: No path could be found.
 :raises ConfigFileError: The configration file could not be read.
-:raises ConfigSetError: The configuration file does not contain ``configset``.
+:raises ConfigSetError: The configuration file does not contain
+                        ``configset``.
 
-The actual parsing of the configuration file is done by the :mod:`ConfigParser`
-module.
+The actual parsing of the configuration file is done by the
+:mod:`ConfigParser` module.
 '''
     schema = {}
 
@@ -100,8 +101,8 @@ module.
             raise ConfigPathError(msg)
 
         if not isfile(configpath):
-            m = 'Could not read the configuration, as the configuration file '\
-                '"{0}" does not exist.'
+            m = 'Could not read the configuration, as the configuration '\
+                'file "{0}" does not exist.'
             msg = m.format(configpath)
             raise ConfigFileError(msg)
 
@@ -142,7 +143,8 @@ from a string to one of the types passed in as :param:`schema`.
 :param str confgitype: The identifier for the section.
 :returns: The schema that is currently set for the section.
 :rtype: A ``dict``, containing ``optionId: type`` pairs.
-:raises ConfigNoSchemaError: No schema with the identifer ``configtype`` found.
+:raises ConfigNoSchemaError: No schema with the identifer ``configtype``
+                             found.
 '''
         if configtype not in self.schema:
             m = 'No schema defined for configuration type "{0}".'
@@ -164,7 +166,8 @@ from a string to one of the types passed in as :param:`schema`.
 :returns: The values for all options in the provided section/
 :rtype: A ``dict`` containing ``optionId: value`` pairs. The values are
         coerced using the schema set by :meth:`set_schema`.
-:raises ConfigNoSectionError: No section for the ID in ``configtype`` exists.
+:raises ConfigNoSectionError: No section for the ID in ``configtype``
+                              exists.
 :raises ConfigNoOption: An option could not be found in the section.
 :raises ConfigConvertError: An option could not be coerced.
 
