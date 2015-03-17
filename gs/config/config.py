@@ -159,16 +159,20 @@ from a string to one of the types passed in as :param:`schema`.
 :rtype: ``list``'''
         return self.parser.options('config-' + self.configset)
 
-    def get(self, configtype):
+    def get(self, configtype, strict=True):
         '''Get the values defined in a section
 
 :param str configtype: The ID for the section to retrieve.
-:returns: The values for all options in the provided section/
+:param bool strict: If ``True`` (the default) then a ``ConfigNoOption``
+    error is raised when an option is present in the configuration file
+    but absent from the schema. When ``False`` the option is ignored.
+:returns: The values for all options in the provided section.
 :rtype: A ``dict`` containing ``optionId: value`` pairs. The values are
         coerced using the schema set by :meth:`set_schema`.
 :raises ConfigNoSectionError: No section for the ID in ``configtype``
                               exists.
-:raises ConfigNoOption: An option could not be found in the section.
+:raises ConfigNoOption: An option was present in the configuration file but
+    absent from the section.
 :raises ConfigConvertError: An option could not be coerced.
 
 **Example**::
@@ -190,10 +194,13 @@ from a string to one of the types passed in as :param:`schema`.
 
         retval = {}
         for option in self.parser.options(configtype + '-' + secval):
-            if option not in schema:
-                m = 'No option "{0}" defined in schema for "{1}".'
-                msg = m.format(option, configtype)
-                raise ConfigNoOptionError(msg)
+            if (option not in schema):
+                if strict:
+                    m = 'No option "{0}" defined in schema for "{1}".'
+                    msg = m.format(option, configtype)
+                    raise ConfigNoOptionError(msg)
+                else:
+                    continue
             val = self.parser.get(configtype + '-' + secval, option)
             try:
                 val = schema[option](val)
