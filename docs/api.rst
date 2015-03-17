@@ -3,7 +3,6 @@
 
 The package exports the following API symbols.
 
-
 Configuration
 -------------
 
