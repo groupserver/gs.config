@@ -7,7 +7,7 @@ Configuration files with "sets"
 
 :Authors: `Richard Waid`_; `Michael JasonSmith`_
 :Contact: Michael JasonSmith <mpj17@onlinegroups.net>
-:Date: 2014-04-24
+:Date: 2015-03-17
 :Organization: `GroupServer.org`_
 :Copyright: This document is licensed under a
   `Creative Commons Attribution-Share Alike 4.0 International License`_
@@ -121,9 +121,10 @@ gracefully to being passed an ID.
 Resources
 =========
 
-- Documentation: http://gsconfig.readthedocs.org/
-- Code repository: https://source.iopen.net/groupserver/gs.config
-- Questions and comments to http://groupserver.org/groups/development
+- Documentation: http://groupserver.readthedocs.org/projects/gsconfig
+- Code repository: https://github.com/groupserver/gs.config
+- Questions and comments to
+  http://groupserver.org/groups/development
 - Report bugs at https://redmine.iopen.net/projects/groupserver
 
 .. [#gs] While originally written for GroupServer_, there is no
@@ -131,10 +132,10 @@ Resources
          GroupServer. However, this product is used to configure
          the database_, SMTP_, cache_, and `token
          authentication`_ for GroupServer.
-.. _database: https://source.iopen.net/groupserver/gs.database
-.. _SMTP: https://source.iopen.net/groupserver/gs.email
-.. _cache: https://source.iopen.net/groupserver/gs.cache
-.. _token authentication: https://source.iopen.net/groupserver/gs.auth.token
+.. _database: https://github.com/groupserver/gs.database
+.. _SMTP: https://github.com/groupserver/gs.email
+.. _cache: https://github.com/groupserver/gs.cache
+.. _token authentication: https://github.com/groupserver/gs.auth.token
 
 .. _GroupServer: http://groupserver.org/
 .. _GroupServer.org: http://groupserver.org/

@@ -13,6 +13,15 @@ Contents:
    example
    HISTORY
 
+Resources
+=========
+
+- Documentation: http://groupserver.readthedocs.org/projects/gsconfig
+- Code repository: https://github.com/groupserver/gs.config
+- Questions and comments to
+  http://groupserver.org/groups/development
+- Report bugs at https://redmine.iopen.net/projects/groupserver
+
 Indices and tables
 ==================
 
