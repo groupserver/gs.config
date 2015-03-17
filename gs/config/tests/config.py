@@ -212,7 +212,7 @@ age = 12
         self.assertNotIn('violence', p)
 
     def test_get_dan(self):
-        '''Test getting that getting an option that has no schema raises an
+        '''Test that getting an option that has no schema raises an
 error. Named for Dan Randow, who found the issue'''
         gs.config.config.USINGZOPE = False
         configFile = self.get_config_file()
@@ -232,6 +232,25 @@ error. Named for Dan Randow, who found the issue'''
         self.assertIn('parana', msg)
 
         self.del_config_file(configFile)
+
+    def test_get_lax_parse(self):
+        '''Test that getting an option that has no schema is fine if
+lax-parsing is on (strict=False)'''
+        gs.config.config.USINGZOPE = False
+        configFile = self.get_config_file()
+
+        # Write an option to the end of the config file
+        with codecs.open(configFile, 'a', encoding='utf-8') as outfile:
+            outfile.write('violence = False\n')
+
+        c = gs.config.config.Config('default', configpath=configFile)
+        s = {'twins': bool, 'names': str, 'likes': str, 'age': int}
+        c.set_schema('parana', s)
+
+        p = c.get('parana', strict=False)
+        default = 'Tonight on Ethyl the Frog we look at Violence'
+        r = p.get('boot', default)
+        self.assertEqual(default, r)
 
     def test_get_convert_errror(self):
         gs.config.config.USINGZOPE = False
