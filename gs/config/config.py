@@ -16,7 +16,7 @@ from __future__ import absolute_import, unicode_literals
 from os.path import isfile, join as path_join
 import sys
 if (sys.version_info >= (3, )):
-    from configparser import SafeConfigParser
+    from configparser import ConfigParser as SafeConfigParser
 else:
     from ConfigParser import SafeConfigParser  # lint:ok
 from logging import getLogger
@@ -77,12 +77,13 @@ class Config(object):
 
 :param str configset: The name of the configuration set to read.
 :param str configpath: The path to the configration file. If ``None`` *and*
-                       Zope is being used then ``etc/gsconfig.ini`` is read
-                       from instance directory.
-:raises ConfigPathError: No path could be found.
-:raises ConfigFileError: The configration file could not be read.
-:raises ConfigSetError: The configuration file does not contain
-                        ``configset``.
+    Zope is being used then some standard Zope configuration directories are
+    checked (see :meth:`Config.get_zope_config`).
+:raises gs.config.errors.ConfigPathError: No path could be found.
+:raises gs.config.errors.ConfigFileError: The configration file could not be
+    read.
+:raises gs.config.errors.ConfigSetError: The configuration file lacks
+    ``configset``.
 
 The actual parsing of the configuration file is done by the
 :mod:`ConfigParser` module.
@@ -92,19 +93,13 @@ The actual parsing of the configuration file is done by the
     def __init__(self, configset, configpath=None):
         '''Initialise the configuration'''
         if USINGZOPE and not configpath:
-            # again, try and figure out from our groupserver config,
-            # otherwise abort.
-            cfg = getConfiguration()
-            configpath = path_join(cfg.instancehome, 'etc/gsconfig.ini')
+            configpath = self.get_zope_config()
+        elif (configpath and (not isfile(configpath))):
+            msg = 'Could not read configuration file {0}'.format(configpath)
+            raise ConfigFileError(configpath)
         elif configpath is None:
             msg = "No configpath set, unable to read configfile"
             raise ConfigPathError(msg)
-
-        if not isfile(configpath):
-            m = 'Could not read the configuration, as the configuration '\
-                'file "{0}" does not exist.'
-            msg = m.format(configpath)
-            raise ConfigFileError(msg)
 
         log.info("Reading the config file <%s>" % configpath)
         self.parser = SafeConfigParser()
@@ -116,6 +111,36 @@ The actual parsing of the configuration file is done by the
             raise ConfigSetError(msg)
         self.configset = configset
 
+    @staticmethod
+    def get_zope_config():
+        '''Try and figure out where the groupserver config is, using Zope
+
+:returns: The location of the config file from Zope.
+:rtype: str
+:raises gs.config.errors.ConfigFileError: The configration file failed to
+    be read.
+
+The location of the configration file should either be the
+``$ZOPE_HOME/etc/gsconfig.ini`` or ``$INSTANCE_HOME/etc/gsconfig.ini``, with
+the latter preferred for backwards compatibility, but the former being more
+typical. This normally equates to ``etc/gsconfig.ini`` within what the
+installation documentation refers to as *the GroupServer directory*.
+'''
+        cfg = getConfiguration()
+        # The old location. May go AWOL.
+        iConfigPath = path_join(cfg.instancehome, 'etc/gsconfig.ini')
+        # The better location.
+        zConfigPath = path_join(cfg.zopehome, 'etc/gsconfig.ini')
+
+        if ((not isfile(iConfigPath)) and (not isfile(zConfigPath))):
+            m = 'Could not read the configuration, as neither "{0}" nor '\
+                '"{1}" exist.'
+            msg = m.format(iConfigPath, zConfigPath)
+            raise ConfigFileError(msg)
+
+        retval = iConfigPath if isfile(iConfigPath) else zConfigPath
+        return retval
+
     def set_schema(self, configtype, schema):
         '''Set the schema that is used for parsing the options.
 
@@ -123,7 +148,7 @@ The actual parsing of the configuration file is done by the
 :param dict schema: The schema for the section, as ``optionId: type`` pars.
 
 When the value for an option in a section is retrieved its *type* is coerced
-from a string to one of the types passed in as :param:`schema`.
+from a string to one of the types passed in as ``schema``.
 
 **Example**::
 
@@ -143,8 +168,8 @@ from a string to one of the types passed in as :param:`schema`.
 :param str confgitype: The identifier for the section.
 :returns: The schema that is currently set for the section.
 :rtype: A ``dict``, containing ``optionId: type`` pairs.
-:raises ConfigNoSchemaError: No schema with the identifer ``configtype``
-                             found.
+:raises gs.config.errors.ConfigNoSchemaError: No schema with the
+    identifer ``configtype`` found.
 '''
         if configtype not in self.schema:
             m = 'No schema defined for configuration type "{0}".'
@@ -169,11 +194,11 @@ from a string to one of the types passed in as :param:`schema`.
 :returns: The values for all options in the provided section.
 :rtype: A ``dict`` containing ``optionId: value`` pairs. The values are
         coerced using the schema set by :meth:`set_schema`.
-:raises ConfigNoSectionError: No section for the ID in ``configtype``
-                              exists.
-:raises ConfigNoOption: An option was present in the configuration file but
-    absent from the section.
-:raises ConfigConvertError: An option could not be coerced.
+:raises gs.config.errors.ConfigNoSectionError: No section for the ID in
+    ``configtype`` exists.
+:raises gs.config.errors.ConfigNoOptionError: An option was present in the
+    configuration file but absent from the section.
+:raises gs.config.errors.ConfigConvertError: An option could not be coerced.
 
 **Example**::
 

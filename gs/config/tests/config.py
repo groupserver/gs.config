@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ############################################################################
 #
-# Copyright © 2014 OnlineGroups.net and Contributors.
+# Copyright © 2014, 2015 OnlineGroups.net and Contributors.
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
@@ -14,10 +14,12 @@
 ############################################################################
 from __future__ import absolute_import, unicode_literals
 import codecs
-from os import remove
-from tempfile import NamedTemporaryFile
+from os import (remove, mkdir)
+from os.path import join as path_join
+from shutil import rmtree
+from tempfile import (NamedTemporaryFile, mkdtemp)
 from unittest import TestCase
-from mock import MagicMock
+from mock import (MagicMock, patch)
 import gs.config.config
 from gs.config.errors import ConfigNoSectionError, ConfigNoOptionError
 
@@ -118,17 +120,6 @@ age = 12
         gs.config.config.USINGZOPE = False
         self.assertRaises(gs.config.config.ConfigPathError,
                           gs.config.config.Config, ('default', ))
-
-    def test_missing_file(self):
-        '''Test we get a ConfigFileError if we provide a config file,
-        but it is missing.'''
-        gs.config.config.USINGZOPE = False
-        with NamedTemporaryFile('w', delete=True) as tmp:
-            configFile = tmp.name
-            tmp.write('Delete me.')
-        self.assertRaises(gs.config.config.ConfigFileError,
-                          gs.config.config.Config, 'default',
-                          configpath=configFile)
 
     def get_config_file(self):
         with NamedTemporaryFile('w', delete=False) as tmp:
@@ -262,3 +253,91 @@ lax-parsing is on (strict=False)'''
 
         self.assertRaises(gs.config.config.ConfigConvertError, c.get,
                           'parana')
+
+    @patch('gs.config.config.getConfiguration')
+    def test_instancehome_exists(self, mock_getConfig):
+        'INSTANCE_HOME only exists'
+        d = mkdtemp()
+        e_etc = path_join(d, 'etc')
+        mkdir(e_etc)
+        gsconfPath = path_join(e_etc, 'gsconfig.ini')
+        with codecs.open(gsconfPath, 'w', encoding='utf-8') as outfile:
+            outfile.write(self.config)
+        gs.config.config.USINGZOPE = True
+        mockConfig = mock_getConfig()
+        mockConfig.instancehome = d
+
+        dNonExistant = mkdtemp()
+        mockConfig.zopehome = dNonExistant
+
+        r = gs.config.config.Config.get_zope_config()
+        self.assertEqual(gsconfPath, r)
+        rmtree(d)
+        rmtree(dNonExistant)
+
+    @patch('gs.config.config.getConfiguration')
+    def test_zopehome_exists(self, mock_getConfig):
+        'ZOME_HOME only exists'
+        d = mkdtemp()
+        e_etc = path_join(d, 'etc')
+        mkdir(e_etc)
+        gsconfPath = path_join(e_etc, 'gsconfig.ini')
+        with codecs.open(gsconfPath, 'w', encoding='utf-8') as outfile:
+            outfile.write(self.config)
+        gs.config.config.USINGZOPE = True
+        mockConfig = mock_getConfig()
+        mockConfig.zopehome = d
+
+        dNonExistant = mkdtemp()
+        mockConfig.instancehome = dNonExistant
+
+        r = gs.config.config.Config.get_zope_config()
+        self.assertEqual(gsconfPath, r)
+        rmtree(d)
+        rmtree(dNonExistant)
+
+    @patch('gs.config.config.getConfiguration')
+    def test_instancehome_preferred(self, mock_getConfig):
+        'INSTANCE_HOME is preferred over ZOME_HOME'
+        d_zopeHome = mkdtemp()
+        d_zopeHome_etc = path_join(d_zopeHome, 'etc')
+        mkdir(d_zopeHome_etc)
+        notGsconfPath = path_join(d_zopeHome_etc, 'gsconfig.ini')
+        with codecs.open(notGsconfPath, 'w', encoding='utf-8') as outfile:
+            outfile.write(self.config)
+        gs.config.config.USINGZOPE = True
+        mockConfig = mock_getConfig()
+        mockConfig.zopehome = d_zopeHome
+
+        d_instanceHome = mkdtemp()
+        d_instanceHome_etc = path_join(d_instanceHome, 'etc')
+        mkdir(d_instanceHome_etc)
+        gsconfPath = path_join(d_instanceHome_etc, 'gsconfig.ini')
+        with codecs.open(gsconfPath, 'w', encoding='utf-8') as outfile:
+            outfile.write(self.config)
+        mockConfig.instancehome = d_instanceHome
+
+        r = gs.config.config.Config.get_zope_config()
+        self.assertEqual(gsconfPath, r)
+        rmtree(d_zopeHome)
+        rmtree(d_instanceHome)
+
+    @patch('gs.config.config.getConfiguration')
+    def test_missing_zope_files(self, mock_getConfig):
+        'Test we get a ConfigFileError if neither Zope config files exist'
+        gs.config.config.USINGZOPE = True
+        mockConfig = mock_getConfig()
+        d_instanceHome = mkdtemp()
+        mockConfig.instancehome = d_instanceHome
+        d_zopeHome = mkdtemp()
+        mockConfig.zopehome = d_zopeHome
+
+        with self.assertRaises(gs.config.config.ConfigFileError):
+            gs.config.config.Config.get_zope_config()
+
+    def test_missing_file(self):
+        emptyDir = mkdtemp()
+        wrong = path_join(emptyDir, 'etc', 'gsconfig.ini')
+        with self.assertRaises(gs.config.config.ConfigFileError):
+            gs.config.config.Config('default', wrong)
+        rmtree(emptyDir)
