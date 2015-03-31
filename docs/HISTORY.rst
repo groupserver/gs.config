@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.3.0 (2015-03-30)
+------------------
+
+* Checking both the instance home and the Zope-home for the
+  configuration file
+
 2.2.0 (2015-03-17)
 ------------------
 
