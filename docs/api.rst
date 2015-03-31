@@ -1,6 +1,8 @@
 :mod:`gs.config` API Reference
 ==============================
 
+.. currentmodule:: gs.config
+
 The package exports the following API symbols.
 
 Configuration
